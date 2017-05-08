@@ -72,19 +72,21 @@ def perspective_transform(img, src=None, dst=None):
     img_size = (img.shape[1], img.shape[0])
     if src is None:
         src = np.float32([
-            [(img_size[0] / 2) - 60, img_size[1] / 2 + 100],
-            [((img_size[0] / 6) - 10), img_size[1]],
-            [(img_size[0] * 5 / 6) + 60, img_size[1]],
-            [(img_size[0] / 2 + 70), img_size[1] / 2 + 100]])
+            [(img_size[0] / 2) - 50, img_size[1] / 2 + 100],
+            [((img_size[0] / 6) - 20), img_size[1]],
+            [(img_size[0] * 5 / 6) + 20, img_size[1]],
+            [(img_size[0] / 2 + 50), img_size[1] / 2 + 100]])
     if dst is None:
         dst = np.float32([
             [(img_size[0] / 4), 0],
             [(img_size[0] / 4), img_size[1]],
             [(img_size[0] * 3 / 4), img_size[1]],
             [(img_size[0] * 3 / 4), 0]])
+    print("src", src)
+    print("dst", dst)
 
     M = cv2.getPerspectiveTransform(src, dst)
 
-    warped = cv2.warpPerspective(img, M, img_size)
+    warped = cv2.warpPerspective(img, M, img_size, flags=cv2.INTER_LINEAR)
 
     return warped

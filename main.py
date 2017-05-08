@@ -45,8 +45,15 @@ class LanePipeline:
         cv2.imwrite(
             "output_images/undistort_%s" % name, undistorted_test_image)
 
-        binary = thresholds.combine_thresholds(undistorted_test_image)
-        cv2.imshow("binary", binary.astype(np.float))
+        thresholded_image = thresholds.combine_thresholds(undistorted_test_image)
+
+        src = np.float32([(250,700), (600,450), (700,450), (1050, 700)])
+
+        dst = np.float32([(270, 710), (270, -600), (1050, -600), (1050, 710)])
+
+        birdview_image = calibration.perspective_transform(
+            thresholded_image, src, dst)
+        cv2.imshow("birdview", birdview_image.astype(np.float))
         cv2.waitKey(-1)
 
 
