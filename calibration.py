@@ -82,8 +82,6 @@ def perspective_transform(img, src=None, dst=None):
             [(img_size[0] / 4), img_size[1]],
             [(img_size[0] * 3 / 4), img_size[1]],
             [(img_size[0] * 3 / 4), 0]])
-    print("src", src)
-    print("dst", dst)
 
     M = cv2.getPerspectiveTransform(src, dst)
 
