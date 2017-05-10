@@ -5,7 +5,8 @@ import cv2
 import numpy as np
 import thresholds
 import calibration
-
+import line_fit
+from moviepy.editor import VideoFileClip
 
 
 class LanePipeline:
@@ -78,27 +79,59 @@ class LanePipeline:
 
     def find_lanes(self):
         self._calibration()
+        import glob
+        for image_path in glob.glob("test_images/*.jpg"):
+            test_image = cv2.imread(image_path)
+            image = self.find_lane_on_image(test_image)
+            cv2.imshow(image_path, image)
+            cv2.waitKey(-1)
 
-        test_image = cv2.imread(self._test_image_path)
-        undistorted_test_image = self._undistort(test_image)
-        name = self._test_image_path.split("/")[-1]
-        self.save_image("output_images/%s" % name, test_image)
-        self.save_image(
-            "output_images/undistort_%s" % name, undistorted_test_image)
+    def find_lane_on_image(self, image):
+        undistorted_image = self._undistort(image)
+        #name = self._test_image_path.split("/")[-1]
+        #self.save_image("output_images/%s" % name, test_image)
+        #self.save_image(
+        #    "output_images/undistort_%s" % name, undistorted_image)
 
-        src, dst = self.get_bird_view_params(undistorted_test_image, False)
+        src, dst = self.get_bird_view_params(undistorted_image, False)
 
-        thresholded_image = thresholds.combine_thresholds(undistorted_test_image)
+        thresholded_image = thresholds.combine_thresholds(undistorted_image)
         self.save_image("output_images/thresholded_image.jpg", thresholded_image)
         #cv2.imshow("thresholded", thresholded_image.astype(np.float))
         #cv2.waitKey(-1)
 
-        birdview_image = calibration.perspective_transform(
+        birdview_image, _ = calibration.perspective_transform(
             thresholded_image, src, dst)
         #cv2.imshow("birdview", birdview_image.astype(np.float32))
         #cv2.waitKey(-1)
+
+        left_curvature, left_position, left_hist_base, \
+            right_curvature, right_position, right_hist_base, \
+            color_warp = line_fit.fit(birdview_image)
+
+        result = self.draw_lane(undistorted_image, color_warp)
+        return result
+
+    def draw_lane(self, undist, color_warp):
+        src, dst = self.get_bird_view_params(None, False)
+        color_warp_inv, _ = calibration.perspective_transform(
+            color_warp, dst, src)
+
+        # Combine the result with the original image
+        result = cv2.addWeighted(undist, 1, color_warp_inv, 0.3, 0)
+        return result
+
+    def process_video(self, video_file_path):
+        self._calibration()
+        def process_image(image):
+            return self.find_lane_on_image(image)
+        video_output = "%s_output.mp4" % video_file_path.split(".")[0]
+        clip1 = VideoFileClip(video_file_path)
+        _clip = clip1.fl_image(process_image)
+        _clip.write_videofile(video_output, audio=False)
 
 
 if __name__ == "__main__":
     pipeline = LanePipeline("camera_cal/*.jpg", "test_images/test4.jpg")
     pipeline.find_lanes()
+    #pipeline.process_video("project_video.mp4")
