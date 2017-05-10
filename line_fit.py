@@ -28,11 +28,15 @@ def hist_sliding_window_points(binary_warped, roi=None, show=False):
         roi_left_centroid = roi[0]
         roi_right_centroid = roi[1]
         leftx_base = np.argmax(
-            histogram[roi_left_centroid - margin / 2: roi_left_centroid + margin / 2]
-        ) + roi_left_centroid - margin / 2
+            histogram[
+                int(roi_left_centroid - margin / 2):
+                int(roi_left_centroid + margin / 2)]
+        ) + int(roi_left_centroid - margin / 2)
         rightx_base = np.argmax(
-            histogram[roi_right_centroid - margin / 2: roi_right_centroid + margin / 2]
-        ) + roi_right_centroid - margin / 2
+            histogram[
+                int(roi_right_centroid - margin / 2):
+                int(roi_right_centroid + margin / 2)]
+        ) + int(roi_right_centroid - margin / 2)
 
     nwindows = 9
     # Set height of windows

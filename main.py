@@ -17,6 +17,7 @@ class LanePipeline:
         self._calib_image_paths = calib_image_paths
         self._test_image_path = test_image_path
         self._is_save_image = True
+        self._hist_base_tracking = None
 
     def _calibration(self):
         _pickle_fname = "mtx_dist.pickled"
@@ -86,7 +87,8 @@ class LanePipeline:
             cv2.imshow(image_path, image)
             cv2.waitKey(-1)
 
-    def find_lane_on_image(self, image):
+    def find_lane_on_image(self, image, hist_base_cache=False):
+        height, width, _ = image.shape
         undistorted_image = self._undistort(image)
         #name = self._test_image_path.split("/")[-1]
         #self.save_image("output_images/%s" % name, test_image)
@@ -107,9 +109,31 @@ class LanePipeline:
 
         left_curvature, left_position, left_hist_base, \
             right_curvature, right_position, right_hist_base, \
-            color_warp = line_fit.fit(birdview_image)
+            color_warp = line_fit.fit(
+                birdview_image, roi=self._hist_base_tracking)
+
+        pos_car = ((width / 2 - src[0, 0]) / (src[3, 0] - src[0, 0]) \
+            * (dst[3, 0] - dst[0, 0]) + dst[0, 0]) * line_fit.XM_PER_PIX
+        deviation = pos_car - (left_position + right_position) / 2
+
+        if hist_base_cache:
+            self._hist_base_tracking = [
+                int(left_hist_base), int(right_hist_base)]
 
         result = self.draw_lane(undistorted_image, color_warp)
+        cv2.putText(
+            result, "Left lane radius of curvature: %.2fm" % left_curvature,
+            (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0),
+        )
+        cv2.putText(
+            result, "Right lane radius of curvature: %.2fm" % right_curvature,
+            (20, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0),
+        )
+        cv2.putText(
+            result, "%.2fm %s of center" % (
+                abs(deviation), "left" if deviation < 0 else "right"),
+            (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0),
+        )
         return result
 
     def draw_lane(self, undist, color_warp):
@@ -124,7 +148,7 @@ class LanePipeline:
     def process_video(self, video_file_path):
         self._calibration()
         def process_image(image):
-            return self.find_lane_on_image(image)
+            return self.find_lane_on_image(image, hist_base_cache=True)
         video_output = "%s_output.mp4" % video_file_path.split(".")[0]
         clip1 = VideoFileClip(video_file_path)
         _clip = clip1.fl_image(process_image)
@@ -133,5 +157,5 @@ class LanePipeline:
 
 if __name__ == "__main__":
     pipeline = LanePipeline("camera_cal/*.jpg", "test_images/test4.jpg")
-    pipeline.find_lanes()
-    #pipeline.process_video("project_video.mp4")
+    #pipeline.find_lanes()
+    pipeline.process_video("project_video.mp4")

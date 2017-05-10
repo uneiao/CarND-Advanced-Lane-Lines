@@ -14,8 +14,8 @@ def combine_thresholds(img):
     ksize = 3 # Choose a larger odd number to smooth gradient measurements
 
     # Take both Sobel x and y gradients
-    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=ksize)
-    sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=ksize)
+    #sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=ksize)
+    #sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=ksize)
 
     l_channel = hls[:,:,1]
     s_channel = hls[:,:,2]
