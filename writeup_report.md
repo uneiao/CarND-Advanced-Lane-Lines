@@ -81,7 +81,7 @@ Here's an example of my output for this step.
 
 The code for my perspective transform includes a function called `perspective_transform()`, which appears in lines 68 through 90 in the file `calibration.py`.
 The `perspective_transform()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.
-I chose the hardcode the source and destination points:
+I choose to hardcode the source and destination points:
 
 | Source        | Destination   | 
 |:-------------:|:-------------:| 
