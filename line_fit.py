@@ -92,6 +92,7 @@ def hist_sliding_window_points(binary_warped, roi=None, show=False):
         ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
         left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
         right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
+        text = lambda side, fit: "%s: %.8f * y^2 + %.4f * y + %.2f" % (side, fit[0], fit[1], fit[2])
 
         out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
         out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
@@ -100,9 +101,18 @@ def hist_sliding_window_points(binary_warped, roi=None, show=False):
         cv2.polylines(out_img, left_ppoints, False, (255, 0, 0))
         right_ppoints = np.int32([np.array(list(zip(right_fitx, ploty)))])
         cv2.polylines(out_img, right_ppoints, False, (0, 0, 255))
+        cv2.putText(
+            out_img, text("left", left_fit),
+            (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (200, 200, 200),
+        )
+        cv2.putText(
+            out_img, text("right", right_fit),
+            (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (200, 200, 200),
+        )
 
         cv2.imshow("fit", out_img)
         cv2.waitKey(-1)
+        cv2.imwrite("output_images/fit.jpg", out_img)
         return []
 
     return [(leftx, lefty, leftx_base), (rightx, righty, rightx_base)]

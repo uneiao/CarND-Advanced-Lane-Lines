@@ -8,14 +8,10 @@ import cv2
 def combine_thresholds(img):
 
     hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS).astype(np.float)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # Choose a Sobel kernel size
     ksize = 3 # Choose a larger odd number to smooth gradient measurements
-
-    # Take both Sobel x and y gradients
-    #sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=ksize)
-    #sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=ksize)
 
     l_channel = hls[:,:,1]
     s_channel = hls[:,:,2]
@@ -76,14 +72,16 @@ def combine_thresholds(img):
         return color_binary, sxbinary, s_binary
 
     # Apply each of the thresholding functions
+    # Finally choose absolute sobel thresholding of l channel and s channel of hls scheme
+    # for it could cover most cases
     gradx = abs_sobel_thresh(
-        gray, orient='x', sobel_kernel=ksize, thresh=(20, 100))
+        l_channel, orient='x', sobel_kernel=ksize, thresh=(20, 100))
     grady = abs_sobel_thresh(
-        gray, orient='y', sobel_kernel=ksize, thresh=(20, 100))
+        l_channel, orient='y', sobel_kernel=ksize, thresh=(20, 100))
+    gradx_s_channel = abs_sobel_thresh(s_channel, thresh=(20, 150))
     #mag_binary = mag_thresh(sobelx, sobely, mag_thresh=(30, 100))
     #dir_binary = dir_threshold(sobelx, sobely, thresh=(0.7, 1.3))
     #_, l_binary, s_binary = hls_threshold(hls, (20, 100), (170, 250))
-    gradx_s_channel = abs_sobel_thresh(s_channel, thresh=(20, 150))
 
     # Apply thresholds
     combined_binary = np.zeros_like(gradx)

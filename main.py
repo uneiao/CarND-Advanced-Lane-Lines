@@ -11,12 +11,12 @@ from moviepy.editor import VideoFileClip
 
 class LanePipeline:
 
-    def __init__(self, calib_image_paths, test_image_path):
+    def __init__(self, calib_image_paths, test_image_path, save_image=True):
         self._mtx = None
         self._dist = None
         self._calib_image_paths = calib_image_paths
         self._test_image_path = test_image_path
-        self._is_save_image = True
+        self._is_save_image = save_image
         self._hist_base_tracking = None
 
     def _calibration(self):
@@ -69,7 +69,7 @@ class LanePipeline:
         dst = np.float32([(250, 710), (250, 0), (1050, 0), (1050, 710)])
 
         if show:
-            birdview_image = calibration.perspective_transform(
+            birdview_image, _ = calibration.perspective_transform(
                 outline, src, dst)
             self.save_image(
                 "output_images/pick_polygon_birdview.jpg", birdview_image)
@@ -81,11 +81,12 @@ class LanePipeline:
     def find_lanes(self):
         self._calibration()
         import glob
-        for image_path in glob.glob("test_images/*.jpg"):
+        for image_path in glob.glob("test_images/test4.jpg"):
             test_image = cv2.imread(image_path)
             image = self.find_lane_on_image(test_image)
             cv2.imshow(image_path, image)
             cv2.waitKey(-1)
+            self.save_image("output_images/final_result.jpg", image);
 
     def find_lane_on_image(self, image, hist_base_cache=False):
         height, width, _ = image.shape
@@ -95,10 +96,10 @@ class LanePipeline:
         #self.save_image(
         #    "output_images/undistort_%s" % name, undistorted_image)
 
-        src, dst = self.get_bird_view_params(undistorted_image, False)
+        src, dst = self.get_bird_view_params(undistorted_image, self._is_save_image)
 
         thresholded_image = thresholds.combine_thresholds(undistorted_image)
-        self.save_image("output_images/thresholded_image.jpg", thresholded_image)
+        self.save_image("output_images/thresholded_image.jpg", thresholded_image * 255)
         #cv2.imshow("thresholded", thresholded_image.astype(np.float))
         #cv2.waitKey(-1)
 
@@ -156,6 +157,7 @@ class LanePipeline:
 
 
 if __name__ == "__main__":
-    pipeline = LanePipeline("camera_cal/*.jpg", "test_images/test4.jpg")
+    #pipeline = LanePipeline("camera_cal/*.jpg", "test_images/test4.jpg")
     #pipeline.find_lanes()
+    pipeline = LanePipeline("camera_cal/*.jpg", "test_images/test4.jpg", False)
     pipeline.process_video("project_video.mp4")
